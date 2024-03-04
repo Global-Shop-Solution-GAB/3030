@@ -1,0 +1,48 @@
+Program.Sub.ScreenSU.Start
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+' Restrict access on the Cash Receipt screen
+' Hook 26100
+' Created 6/17/08 by JSO
+
+
+
+Function.Intrinsic.Control.CallSub("LookupUser")
+
+Program.Sub.Main.End
+
+Program.Sub.LookupUser.Start
+Variable.Local.sql.Declare(String)
+Variable.Local.sGroup.Declare(String)
+
+Function.Odbc.Connection!Con.Openconnection(Variable.Ambient.pdsn,Variable.Ambient.PUser,Variable.Ambient.PPass)
+
+Function.Intrinsic.Control.If(Variable.Passed.009000.Trim,<>,"Cash")
+	Function.Intrinsic.String.Concat("SELECT GROUP_ID FROM V_USER_GROUP WHERE USER_ID='",Variable.Caller.user,"' AND COMPANY='",Variable.caller.CompanyCode,"'",Variable.Local.sql)
+	Function.ODBC.Connection!Con.OpenRecordsetRO("rst",Variable.Local.sql)
+	Function.Intrinsic.control.DoUntil(Variable.Odbc.Con!rst.EOF,=,True)
+		Function.Intrinsic.string.trim(Variable.Odbc.Con!rst.fieldval!GROUP_ID,Variable.Local.sGroup)
+		Function.Intrinsic.Control.If(Variable.Local.sGroup,=,"ADMIN")
+			Variable.Passed.777777.Set(0)
+			Function.Intrinsic.Control.ExitDo
+		Function.Intrinsic.Control.ElseIf(Variable.Local.sGroup,=,"Administrator")
+			Variable.Passed.777777.Set(0)
+			Function.Intrinsic.Control.ExitDo
+		Function.Intrinsic.Control.Else
+			Variable.Passed.777777.Set(1)
+		Function.Intrinsic.Control.EndIf
+		Function.ODBC.Con!rst.MoveNext
+	Function.Intrinsic.Control.Loop
+	Function.ODBC.Con!rst.Close
+Function.Intrinsic.Control.endif
+
+Function.ODBC.Connection!Con.Close
+
+Program.Sub.LookupUser.End
+
+
